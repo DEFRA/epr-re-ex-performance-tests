@@ -27,12 +27,30 @@ SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-service-name.${ENVIRONMENT}.cdp-int.defra.c
 SERVICE_PORT=${SERVICE_PORT:-443}
 SERVICE_URL_SCHEME=${SERVICE_URL_SCHEME:-https}
 
+# Set THREAD_COUNT based on PROFILE. The Frontend and Admin Frontend journeys are
+# the primary emphasis of this suite and share THREAD_COUNT; the Backend API
+# journey runs at a reduced, independent BACKEND_THREAD_COUNT since its flows
+# largely overlap with the frontend journeys.
+if [ "$PROFILE" = "max" ]; then
+    THREAD_COUNT=200
+elif [ "$PROFILE" = "mid" ]; then
+    THREAD_COUNT=100
+else
+    THREAD_COUNT=50
+fi
+BACKEND_THREAD_COUNT=$((THREAD_COUNT / 5))
+
 # Run the test suite
 jmeter -n -t ${SCENARIOFILE} -e -l "${REPORTFILE}" -o ${JM_REPORTS} -j ${LOGFILE} -f \
 -Jenv="${ENVIRONMENT}" \
 -Jdomain="${SERVICE_ENDPOINT}" \
 -Jport="${SERVICE_PORT}" \
--Jprotocol="${SERVICE_URL_SCHEME}"
+-Jprotocol="${SERVICE_URL_SCHEME}" \
+-JthreadCount="${THREAD_COUNT}" \
+-JbackendThreadCount="${BACKEND_THREAD_COUNT}" \
+-JcognitoId="${COGNITO_CLIENT_ID}" \
+-JcognitoSecret="${COGNITO_CLIENT_SECRET}"
+test_exit_code=$?
 
 # Publish the results into S3 so they can be displayed in the CDP Portal
 if [ -n "$RESULTS_OUTPUT_S3_PATH" ]; then

@@ -15,6 +15,18 @@ A successful build results in a Docker container that is capable of running your
 The performance test suites are designed to be run from the CDP Portal.
 The CDP Platform runs test suites in much the same way it runs any other service, it takes a docker image and runs it as an ECS task, automatically provisioning infrastructure as required.
 
+## Test Scenario
+
+`scenarios/epr-re-ex-test.jmx` merges the three EPR RE-EX journeys into a single test plan:
+
+* **Frontend Journey Thread Group** - the `epr-frontend` user journey (registrations, PRNs, reports, summary logs)
+* **Admin Frontend Journey Thread Group** - the `epr-re-ex-admin-frontend` journey (organisations, system logs)
+* **Backend API - Setup (Cognito Auth) Thread Group** / **Backend API Journey Thread Group** - the `epr-backend` API journey, plus a one-off setUp group that fetches a Cognito access token
+
+The Frontend and Admin Frontend journeys are the primary emphasis of this suite (they are largely similar user-facing flows) and share the `threadCount` JMeter property. The Backend API journey is driven independently by `backendThreadCount`, which `entrypoint.sh` sets to a fifth of `threadCount` so it runs at a reduced, de-emphasised load relative to the frontend journeys. Both are derived from `PROFILE` (`max`=200/40, `mid`=100/20, default=50/10).
+
+The Backend API journey also needs `COGNITO_CLIENT_ID` / `COGNITO_CLIENT_SECRET` set (passed through as the `cognitoId` / `cognitoSecret` JMeter properties).
+
 ## Local Testing with Docker Compose
 
 You can run the entire performance test stack locally using Docker Compose, including LocalStack, Redis, and the target service. This is useful for development, integration testing, or verifying your test scripts **before committing to `main`**, which will trigger GitHub Actions to build and publish the Docker image.
