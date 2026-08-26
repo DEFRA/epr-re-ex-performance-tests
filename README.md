@@ -15,101 +15,20 @@ A successful build results in a Docker container that is capable of running your
 The performance test suites are designed to be run from the CDP Portal.
 The CDP Platform runs test suites in much the same way it runs any other service, it takes a docker image and runs it as an ECS task, automatically provisioning infrastructure as required.
 
-## Test Scenario
+## Local Testing
 
-`scenarios/epr-re-ex-test.jmx` merges the three EPR RE-EX journeys into a single test plan:
+### Launch the required services using epr-re-ex-service
 
-* **Frontend Journey Thread Group** - the `epr-frontend` user journey (registrations, PRNs, reports, summary logs)
-* **Admin Frontend Journey Thread Group** - the `epr-re-ex-admin-frontend` journey (organisations, system logs)
-* **Backend API - Setup (Cognito Auth) Thread Group** / **Backend API Journey Thread Group** - the `epr-backend` API journey, plus a one-off setUp group that fetches a Cognito access token
-
-The Frontend and Admin Frontend journeys are the primary emphasis of this suite (they are largely similar user-facing flows) and share the `threadCount` JMeter property. The Backend API journey is driven independently by `backendThreadCount`, which `entrypoint.sh` sets to a fifth of `threadCount` so it runs at a reduced, de-emphasised load relative to the frontend journeys. Both are derived from `PROFILE` (`max`=200/40, `mid`=100/20, default=50/10).
-
-The Backend API journey also needs `COGNITO_CLIENT_ID` / `COGNITO_CLIENT_SECRET` set (passed through as the `cognitoId` / `cognitoSecret` JMeter properties).
-
-## Local Testing with Docker Compose
-
-You can run the entire performance test stack locally using Docker Compose, including LocalStack, Redis, and the target service. This is useful for development, integration testing, or verifying your test scripts **before committing to `main`**, which will trigger GitHub Actions to build and publish the Docker image.
-
-### Build the Docker image
-
-```bash
-docker compose build --no-cache development
-```
-
-This ensures any changes to `entrypoint.sh` or other scripts are picked up properly.
-
----
-
-### Start the full test stack
-
-```bash
-docker compose up --build
-```
-
-This brings up:
-
-* `development`: the container that runs your performance tests
-* `localstack`: simulates AWS S3, SNS, SQS, etc.
-* `redis`: backing service for cache
-* `service`: the application under test
-
-Once all services are healthy, your performance tests will automatically start.
-
----
-
-### Replace `service-name` in Compose File
-
-In the `docker-compose.yml`, make sure to replace:
-
-```yaml
-image: defradigital/service-name:${SERVICE_VERSION:-latest}
-```
-
-with the actual name of your service’s image.
-
-This is the service under test, which must expose a `/health` endpoint and listen on port `3000`.
-
----
-
-### Notes
-
-* S3 bucket is expected to be `s3://test-results`, automatically created inside LocalStack.
-* Logs and reports are written to `./reports` on your host.
-* `entrypoint.sh` should contain the logic to wait for dependencies and kick off the test run.
-* The `depends_on` healthchecks ensure services like `localstack` and `service` are ready before tests start.
-* If you make changes to test scripts or entrypoints, rerun with:
-
-```bash
-docker compose up --build
-```
-
-## Local Testing with LocalStack
-
-### Build a new Docker image
-```
-docker build . -t my-performance-tests
-```
-### Create a Localstack bucket
-```
-aws --endpoint-url=localhost:4566 s3 mb s3://my-bucket
-```
-
-### Run performance tests
+Ensure you have the latest version of [epr-re-ex-service](https://github.com/DEFRA/epr-re-ex-service) checked out.
 
 ```
-docker run \
--e S3_ENDPOINT='http://host.docker.internal:4566' \
--e RESULTS_OUTPUT_S3_PATH='s3://my-bucket' \
--e AWS_ACCESS_KEY_ID='test' \
--e AWS_SECRET_ACCESS_KEY='test' \
--e AWS_SECRET_KEY='test' \
--e AWS_REGION='eu-west-2' \
-my-performance-tests
+docker compose -f compose.yml --profile all up -d
 ```
 
-docker run -e S3_ENDPOINT='http://host.docker.internal:4566' -e RESULTS_OUTPUT_S3_PATH='s3://cdp-infra-dev-test-results/cdp-portal-perf-tests/95a01432-8f47-40d2-8233-76514da2236a' -e AWS_ACCESS_KEY_ID='test' -e AWS_SECRET_ACCESS_KEY='test' -e AWS_SECRET_KEY='test' -e AWS_REGION='eu-west-2' -e ENVIRONMENT='perf-test' my-performance-tests
+This will launch the required services for local testing.
+### Running performance tests locally
 
+Download [JMeter](https://jmeter.apache.org/download_jmeter.cgi) and launch the JMeter GUI. Load the `epr-re-ex-test.jmx` file from this repository into JMeter, passing in the `-Jenv=local` option.
 
 ## Licence
 
