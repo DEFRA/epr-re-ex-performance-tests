@@ -6,11 +6,9 @@
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
-      <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
     </TestPlan>
     <hashTree>
-      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group" enabled="false">
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group">
         <intProp name="ThreadGroup.num_threads">1</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -21,7 +19,7 @@
         </elementProp>
       </SetupThreadGroup>
       <hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Retrieve Auth token for Cognito">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Retrieve Auth token for Cognito" enabled="true">
           <stringProp name="HTTPSampler.proxyScheme">http</stringProp>
           <stringProp name="HTTPSampler.proxyHost">localhost</stringProp>
           <intProp name="HTTPSampler.proxyPort">3128</intProp>
@@ -6993,7 +6991,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Retrieve Auth token for Cognito Stub">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Retrieve Auth token for Cognito Stub" enabled="false">
           <stringProp name="TestPlan.comments">Local-mode Cognito auth via the cognito-local stub&apos;s InitiateAuth API (USER_PASSWORD_AUTH) - the stub does not support the real Cognito hosted-UI client_credentials /oauth2/token flow used against real AWS Cognito</stringProp>
           <stringProp name="HTTPSampler.domain">${COGNITO_STUB_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${COGNITO_STUB_PORT}</stringProp>
@@ -14933,7 +14931,7 @@ vars.put(&quot;modifiedPayload&quot;, JsonOutput.toJson(payload))</stringProp>
         <stringProp name="filename">report.csv</stringProp>
       </ResultCollector>
       <hashTree/>
-      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Environment User Defined Variables" enabled="false">
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Environment User Defined Variables">
         <collectionProp name="Arguments.arguments">
           <elementProp name="HTTP_PROTOCOL" elementType="Argument">
             <stringProp name="Argument.name">HTTP_PROTOCOL</stringProp>
@@ -15046,7 +15044,7 @@ vars.put(&quot;modifiedPayload&quot;, JsonOutput.toJson(payload))</stringProp>
         <stringProp name="TestPlan.comments">To be enabled as default and disabled when testing locally</stringProp>
       </Arguments>
       <hashTree/>
-      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Local User Defined Variables" enabled="true">
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Local User Defined Variables" enabled="false">
         <collectionProp name="Arguments.arguments">
           <elementProp name="HTTP_PROTOCOL" elementType="Argument">
             <stringProp name="Argument.name">HTTP_PROTOCOL</stringProp>
