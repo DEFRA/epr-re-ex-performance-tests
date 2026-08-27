@@ -7,7 +7,7 @@
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
     </TestPlan>
     <hashTree>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group">
@@ -178,7 +178,7 @@ props.put(&quot;COGNITO_ACCESS_TOKEN&quot;, token)</stringProp>
           </hashTree>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Frontend Journey Thread Group">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Frontend Journey Thread Group" enabled="true">
         <stringProp name="ThreadGroup.num_threads">${__P(threadCount,1)}</stringProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -189,13 +189,13 @@ props.put(&quot;COGNITO_ACCESS_TOKEN&quot;, token)</stringProp>
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager">
+        <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
           <collectionProp name="CookieManager.cookies"/>
           <boolProp name="CookieManager.clearEachIteration">false</boolProp>
           <boolProp name="CookieManager.controlledByThreadGroup">false</boolProp>
         </CookieManager>
         <hashTree/>
-        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="DataGenerator">
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="DataGenerator" enabled="true">
           <stringProp name="BeanShellSampler.query">import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
@@ -6432,7 +6432,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Linking Page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Linking Page" enabled="true">
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
@@ -6477,7 +6477,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Organisations page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Organisations page" enabled="true">
           <stringProp name="TestPlan.comments">EPR Organisations page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6513,7 +6513,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Waste Balance page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Waste Balance page" enabled="true">
           <stringProp name="TestPlan.comments">EPR Waste Balance page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6619,7 +6619,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Frontend Upload  Redirect HTTP Request">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Frontend Upload  Redirect HTTP Request" enabled="true">
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
@@ -6662,7 +6662,7 @@ vars.put(&quot;page_status&quot;, &quot;NOT_FOUND&quot;)
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Upload">
+        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Upload" enabled="true">
           <stringProp name="WhileController.condition">${__groovy(vars.get(&quot;page_status&quot;).equals(&quot;NOT_FOUND&quot;) &amp;&amp; vars.getObject(&quot;poll_count&quot;).toInteger() &lt; 60)}</stringProp>
         </WhileController>
         <hashTree>
@@ -6730,7 +6730,7 @@ vars.put(&quot;uploaded_status&quot;, &quot;NOT_FOUND&quot;)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload submission page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload submission page" enabled="true">
           <stringProp name="TestPlan.comments">EPR Summary Log upload submission page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6765,7 +6765,7 @@ vars.put(&quot;uploaded_status&quot;, &quot;NOT_FOUND&quot;)</stringProp>
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Submission Page">
+        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Submission Page" enabled="true">
           <stringProp name="WhileController.condition">${__groovy(vars.get(&quot;uploaded_status&quot;).equals(&quot;NOT_FOUND&quot;) &amp;&amp; vars.getObject(&quot;submission_poll_count&quot;).toInteger() &lt; 120)}</stringProp>
         </WhileController>
         <hashTree>
@@ -6829,7 +6829,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR GET Create PRN page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR GET Create PRN page" enabled="true">
           <stringProp name="TestPlan.comments">EPR GET Create PRN page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6844,7 +6844,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion">
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
               <stringProp name="49586">200</stringProp>
             </collectionProp>
@@ -6854,7 +6854,7 @@ if (status == &quot;NOT_FOUND&quot;) {
             <intProp name="Assertion.test_type">2</intProp>
           </ResponseAssertion>
           <hashTree/>
-          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="recipientOrgId Regular Expression Extractor">
+          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="recipientOrgId Regular Expression Extractor" enabled="true">
             <stringProp name="RegexExtractor.useHeaders">false</stringProp>
             <stringProp name="RegexExtractor.refname">recipientOrgId</stringProp>
             <stringProp name="RegexExtractor.regex">&lt;select[^&gt;]*id=&quot;recipient&quot;[^&gt;]*&gt;[\s\S]*?&lt;option value=&quot;([^&quot;]+)&quot;</stringProp>
@@ -6866,7 +6866,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR POST Create Draft PRN request">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR POST Create Draft PRN request" enabled="true">
           <stringProp name="TestPlan.comments">EPR POST Create Draft PRN request</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6942,7 +6942,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR POST View and Create PRN request">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR POST View and Create PRN request" enabled="true">
           <stringProp name="TestPlan.comments">EPR POST View and Create PRN request</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6966,7 +6966,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion">
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
               <stringProp name="49586">200</stringProp>
             </collectionProp>
@@ -6977,7 +6977,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR View PRNs page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR View PRNs page" enabled="true">
           <stringProp name="TestPlan.comments">EPR View PRNs page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -7003,7 +7003,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Select Created PRN page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Select Created PRN page" enabled="true">
           <stringProp name="TestPlan.comments">EPR Select Created PRN page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -7018,7 +7018,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion">
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
               <stringProp name="49586">200</stringProp>
             </collectionProp>
@@ -7029,7 +7029,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Issue Selected PRN">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Issue Selected PRN" enabled="true">
           <stringProp name="TestPlan.comments">EPR Issue Selected PRN</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -7053,7 +7053,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion">
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
               <stringProp name="49586">200</stringProp>
             </collectionProp>
@@ -7063,7 +7063,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
             <intProp name="Assertion.test_type">2</intProp>
           </ResponseAssertion>
           <hashTree/>
-          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="prnNumber Regular Expression Extractor">
+          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="prnNumber Regular Expression Extractor" enabled="true">
             <stringProp name="RegexExtractor.useHeaders">false</stringProp>
             <stringProp name="RegexExtractor.refname">prnNumber</stringProp>
             <stringProp name="RegexExtractor.regex">&lt;br&gt;\s*&lt;strong&gt;([^&lt;]+)&lt;/strong&gt;</stringProp>
@@ -7075,7 +7075,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           </RegexExtractor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="External call to ACCEPT PRN HTTP Request">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="External call to ACCEPT PRN HTTP Request" enabled="true">
           <stringProp name="TestPlan.comments">Ported from Backend API Journey Thread Group. Simulates the external system (Cognito client-credentials M2M caller) accepting the issued PRN. Auth token comes from the COGNITO_ACCESS_TOKEN property set by the Setup Thread Group (real Cognito or the local stub, depending on env).</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_BACKEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_BACKEND_PORT}</stringProp>
@@ -7583,13 +7583,13 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Admin Frontend Journey Thread Group" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Admin Frontend Journey Thread Group">
         <stringProp name="ThreadGroup.num_threads">${__P(threadCount,10)}</stringProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
-          <stringProp name="LoopController.loops">3</stringProp>
+          <stringProp name="LoopController.loops">1</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
       </ThreadGroup>
@@ -7773,12 +7773,115 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="Admin Org Data Generator" enabled="true">
+          <stringProp name="TestPlan.comments">Generates random applicant details for the on-the-fly organisation created below, mirroring the Frontend Journey&apos;s DataGenerator</stringProp>
+          <stringProp name="BeanShellSampler.query">import java.util.Random;
+
+String[] firstNames = {&quot;James&quot;, &quot;Oliver&quot;, &quot;George&quot;, &quot;Noah&quot;, &quot;Arthur&quot;, &quot;Muhammad&quot;, &quot;Leo&quot;, &quot;Harry&quot;, &quot;Oscar&quot;, &quot;Archie&quot;,
+&quot;Amelia&quot;, &quot;Olivia&quot;, &quot;Isla&quot;, &quot;Ava&quot;, &quot;Mia&quot;, &quot;Grace&quot;, &quot;Sophia&quot;, &quot;Freya&quot;, &quot;Charlotte&quot;, &quot;Emily&quot;};
+
+String[] lastNames = {&quot;Smith&quot;, &quot;Jones&quot;, &quot;Taylor&quot;, &quot;Williams&quot;, &quot;Brown&quot;, &quot;Davies&quot;, &quot;Evans&quot;, &quot;Wilson&quot;, &quot;Thomas&quot;, &quot;Roberts&quot;, &quot;Johnson&quot;, &quot;Lewis&quot;, &quot;Walker&quot;, &quot;Robinson&quot;, &quot;Wood&quot;, &quot;Thompson&quot;, &quot;White&quot;, &quot;Watson&quot;, &quot;Jackson&quot;, &quot;Wright&quot;};
+
+String[] addresses = {
+    &quot;42 Victoria Street, London, SW1H 0NP&quot;,
+    &quot;15 Church Lane, Manchester, M1 2AB&quot;,
+    &quot;78 High Street, Birmingham, B2 4QA&quot;,
+    &quot;23 Mill Road, Edinburgh, EH4 3BB&quot;,
+    &quot;91 Oak Avenue, Bristol, BS1 6XY&quot;,
+    &quot;56 Kings Road, Liverpool, L1 9AA&quot;,
+    &quot;12 Station Road, Cardiff, CF10 1EP&quot;,
+    &quot;67 Park Lane, Leeds, LS1 2TW&quot;,
+    &quot;34 Queen&apos;s Drive, Glasgow, G12 0AA&quot;,
+    &quot;89 Castle Street, Newcastle, NE1 1RQ&quot;
+};
+
+String[] jobTitles = {
+    &quot;Software Developer&quot;, &quot;Marketing Manager&quot;, &quot;Sales Assistant&quot;, &quot;Project Manager&quot;, &quot;Data Analyst&quot;,
+    &quot;HR Coordinator&quot;, &quot;Financial Advisor&quot;, &quot;Graphic Designer&quot;, &quot;Operations Manager&quot;, &quot;Business Analyst&quot;,
+    &quot;Customer Service Representative&quot;, &quot;IT Support Specialist&quot;, &quot;Account Executive&quot;, &quot;Product Manager&quot;,
+    &quot;Quality Assurance Tester&quot;, &quot;Administrative Assistant&quot;, &quot;Research Scientist&quot;, &quot;Social Media Manager&quot;,
+    &quot;Network Engineer&quot;, &quot;Content Writer&quot;, &quot;Legal Assistant&quot;, &quot;Procurement Officer&quot;, &quot;Training Coordinator&quot;,
+    &quot;Systems Administrator&quot;, &quot;UX Designer&quot;
+};
+
+String[] mobilePrefixes = {&quot;07700&quot;, &quot;07701&quot;, &quot;07702&quot;, &quot;07703&quot;, &quot;07704&quot;, &quot;07705&quot;, &quot;07706&quot;, &quot;07707&quot;, &quot;07708&quot;, &quot;07709&quot;};
+
+String[] emailDomains = {&quot;fakeemail.com&quot;, &quot;defratesters.co.uk&quot;, &quot;morefaketesting.co.uk&quot;, &quot;defraperftest.com&quot;, &quot;defragovtest.com&quot;, &quot;testingfakeemails.com&quot;};
+
+String[] companies = {&quot;Testers Limited&quot;, &quot;Garbage Extinguishers Limited&quot;, &quot;Recyclers Limited&quot;, &quot;Exportations Limited&quot;, &quot;Acme Limited&quot;, &quot;Throwaway Limited&quot;, &quot;Producers Limited&quot;, &quot;Consumers Limited&quot;};
+
+Random rand = new Random();
+
+String firstName = firstNames[rand.nextInt(firstNames.length)];
+String lastName = lastNames[rand.nextInt(lastNames.length)];
+String fullAddress = addresses[rand.nextInt(addresses.length)];
+String jobTitle = jobTitles[rand.nextInt(jobTitles.length)];
+String company = companies[rand.nextInt(companies.length)];
+
+String mobilePrefix = mobilePrefixes[rand.nextInt(mobilePrefixes.length)];
+int mobileNum = rand.nextInt(900000) + 100000;
+String mobileNumber = mobilePrefix + mobileNum;
+
+String emailDomain = emailDomains[rand.nextInt(emailDomains.length)];
+int emailNum = rand.nextInt(99) + 1;
+String email = firstName.toLowerCase() + &quot;.&quot; + lastName.toLowerCase() + emailNum + &quot;@&quot; + emailDomain;
+
+vars.put(&quot;fullName&quot;, firstName + &quot; &quot; + lastName);
+vars.put(&quot;email&quot;, email);
+vars.put(&quot;telephone&quot;, mobileNumber);
+vars.put(&quot;address&quot;, fullAddress);
+vars.put(&quot;jobTitle&quot;, jobTitle);
+vars.put(&quot;company&quot;, company);</stringProp>
+        </BeanShellSampler>
+        <hashTree/>
+        <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Admin Organisation Creation Lock" enabled="true">
+          <stringProp name="CriticalSectionController.lockName">global_lock</stringProp>
+        </CriticalSectionController>
+        <hashTree>
+          <ModuleController guiclass="ModuleControllerGui" testclass="ModuleController" testname="Create Organisation Module Controller" enabled="true">
+            <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Organisation Details HTTP Request (just the org-creation call, not Registration/Accreditation) to create a fresh organisation on the fly and extract its orgId/refNo, instead of reading a pre-generated orgId from CSV Data Set Config. NOTE: deliberately named differently from Frontend Journey&apos;s &quot;Form Submission Controller&quot; wrapper above - Module Controller resolves its target purely by tree-node name, and a duplicate name here previously caused the JMeter GUI to mis-save this reference as pointing at itself (infinite recursion / StackOverflowError). Keep this name unique.</stringProp>
+            <collectionProp name="ModuleController.node_path">
+              <stringProp name="0">Test Plan</stringProp>
+              <stringProp name="1">epr-re-ex-performance-tests Performance Tests</stringProp>
+              <stringProp name="2">Frontend Journey Thread Group</stringProp>
+              <stringProp name="3">Form Submission Controller</stringProp>
+              <stringProp name="4">Organisation Details HTTP Request</stringProp>
+            </collectionProp>
+          </ModuleController>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Migrate Organisation HTTP Request" enabled="true">
+          <stringProp name="TestPlan.comments">Persists the on-the-fly organisation created above into the queryable organisations store, mirroring the Frontend Journey&apos;s Migrate Organisation HTTP Request - without this, the Admin Edit/Update Organisation calls below 404 because the raw form submission was never migrated.</stringProp>
+          <stringProp name="HTTPSampler.domain">${EPR_BACKEND_HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${EPR_BACKEND_PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/v1/dev/form-submissions/${refNo}/migrate</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin Edit Organisation page" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin Edit Organisation page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7814,7 +7917,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7852,18 +7955,6 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV Data Set Config" enabled="true">
-          <stringProp name="delimiter">,</stringProp>
-          <stringProp name="fileEncoding"></stringProp>
-          <stringProp name="filename">testinput.csv</stringProp>
-          <boolProp name="ignoreFirstLine">false</boolProp>
-          <boolProp name="quotedData">false</boolProp>
-          <boolProp name="recycle">true</boolProp>
-          <stringProp name="shareMode">shareMode.all</stringProp>
-          <boolProp name="stopThread">false</boolProp>
-          <stringProp name="variableNames"></stringProp>
-        </CSVDataSet>
-        <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin View System Logs" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin View System Logs</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
@@ -7895,7 +7986,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/system-logs?referenceNumber=${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/system-logs?referenceNumber=${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7917,7 +8008,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -7954,7 +8045,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -7991,7 +8082,7 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
         <stringProp name="filename">report.csv</stringProp>
       </ResultCollector>
       <hashTree/>
-      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments">
           <elementProp name="HTTP_PROTOCOL" elementType="Argument">
             <stringProp name="Argument.name">HTTP_PROTOCOL</stringProp>
