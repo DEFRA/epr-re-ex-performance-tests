@@ -7,7 +7,7 @@
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
     </TestPlan>
     <hashTree>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group">
@@ -7773,6 +7773,77 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
+        <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="Admin Org Data Generator" enabled="true">
+          <stringProp name="TestPlan.comments">Generates random applicant details for the on-the-fly organisation created below, mirroring the Frontend Journey&apos;s DataGenerator</stringProp>
+          <stringProp name="BeanShellSampler.query">import java.util.Random;
+
+String[] firstNames = {&quot;James&quot;, &quot;Oliver&quot;, &quot;George&quot;, &quot;Noah&quot;, &quot;Arthur&quot;, &quot;Muhammad&quot;, &quot;Leo&quot;, &quot;Harry&quot;, &quot;Oscar&quot;, &quot;Archie&quot;,
+&quot;Amelia&quot;, &quot;Olivia&quot;, &quot;Isla&quot;, &quot;Ava&quot;, &quot;Mia&quot;, &quot;Grace&quot;, &quot;Sophia&quot;, &quot;Freya&quot;, &quot;Charlotte&quot;, &quot;Emily&quot;};
+
+String[] lastNames = {&quot;Smith&quot;, &quot;Jones&quot;, &quot;Taylor&quot;, &quot;Williams&quot;, &quot;Brown&quot;, &quot;Davies&quot;, &quot;Evans&quot;, &quot;Wilson&quot;, &quot;Thomas&quot;, &quot;Roberts&quot;, &quot;Johnson&quot;, &quot;Lewis&quot;, &quot;Walker&quot;, &quot;Robinson&quot;, &quot;Wood&quot;, &quot;Thompson&quot;, &quot;White&quot;, &quot;Watson&quot;, &quot;Jackson&quot;, &quot;Wright&quot;};
+
+String[] addresses = {
+    &quot;42 Victoria Street, London, SW1H 0NP&quot;,
+    &quot;15 Church Lane, Manchester, M1 2AB&quot;,
+    &quot;78 High Street, Birmingham, B2 4QA&quot;,
+    &quot;23 Mill Road, Edinburgh, EH4 3BB&quot;,
+    &quot;91 Oak Avenue, Bristol, BS1 6XY&quot;,
+    &quot;56 Kings Road, Liverpool, L1 9AA&quot;,
+    &quot;12 Station Road, Cardiff, CF10 1EP&quot;,
+    &quot;67 Park Lane, Leeds, LS1 2TW&quot;,
+    &quot;34 Queen&apos;s Drive, Glasgow, G12 0AA&quot;,
+    &quot;89 Castle Street, Newcastle, NE1 1RQ&quot;
+};
+
+String[] jobTitles = {
+    &quot;Software Developer&quot;, &quot;Marketing Manager&quot;, &quot;Sales Assistant&quot;, &quot;Project Manager&quot;, &quot;Data Analyst&quot;,
+    &quot;HR Coordinator&quot;, &quot;Financial Advisor&quot;, &quot;Graphic Designer&quot;, &quot;Operations Manager&quot;, &quot;Business Analyst&quot;,
+    &quot;Customer Service Representative&quot;, &quot;IT Support Specialist&quot;, &quot;Account Executive&quot;, &quot;Product Manager&quot;,
+    &quot;Quality Assurance Tester&quot;, &quot;Administrative Assistant&quot;, &quot;Research Scientist&quot;, &quot;Social Media Manager&quot;,
+    &quot;Network Engineer&quot;, &quot;Content Writer&quot;, &quot;Legal Assistant&quot;, &quot;Procurement Officer&quot;, &quot;Training Coordinator&quot;,
+    &quot;Systems Administrator&quot;, &quot;UX Designer&quot;
+};
+
+String[] mobilePrefixes = {&quot;07700&quot;, &quot;07701&quot;, &quot;07702&quot;, &quot;07703&quot;, &quot;07704&quot;, &quot;07705&quot;, &quot;07706&quot;, &quot;07707&quot;, &quot;07708&quot;, &quot;07709&quot;};
+
+String[] emailDomains = {&quot;fakeemail.com&quot;, &quot;defratesters.co.uk&quot;, &quot;morefaketesting.co.uk&quot;, &quot;defraperftest.com&quot;, &quot;defragovtest.com&quot;, &quot;testingfakeemails.com&quot;};
+
+String[] companies = {&quot;Testers Limited&quot;, &quot;Garbage Extinguishers Limited&quot;, &quot;Recyclers Limited&quot;, &quot;Exportations Limited&quot;, &quot;Acme Limited&quot;, &quot;Throwaway Limited&quot;, &quot;Producers Limited&quot;, &quot;Consumers Limited&quot;};
+
+Random rand = new Random();
+
+String firstName = firstNames[rand.nextInt(firstNames.length)];
+String lastName = lastNames[rand.nextInt(lastNames.length)];
+String fullAddress = addresses[rand.nextInt(addresses.length)];
+String jobTitle = jobTitles[rand.nextInt(jobTitles.length)];
+String company = companies[rand.nextInt(companies.length)];
+
+String mobilePrefix = mobilePrefixes[rand.nextInt(mobilePrefixes.length)];
+int mobileNum = rand.nextInt(900000) + 100000;
+String mobileNumber = mobilePrefix + mobileNum;
+
+String emailDomain = emailDomains[rand.nextInt(emailDomains.length)];
+int emailNum = rand.nextInt(99) + 1;
+String email = firstName.toLowerCase() + &quot;.&quot; + lastName.toLowerCase() + emailNum + &quot;@&quot; + emailDomain;
+
+vars.put(&quot;fullName&quot;, firstName + &quot; &quot; + lastName);
+vars.put(&quot;email&quot;, email);
+vars.put(&quot;telephone&quot;, mobileNumber);
+vars.put(&quot;address&quot;, fullAddress);
+vars.put(&quot;jobTitle&quot;, jobTitle);
+vars.put(&quot;company&quot;, company);</stringProp>
+        </BeanShellSampler>
+        <hashTree/>
+        <ModuleController guiclass="ModuleControllerGui" testclass="ModuleController" testname="Create Organisation Module Controller" enabled="true">
+          <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Form Submission Controller to create a fresh organisation on the fly and extract its orgId, instead of reading a pre-generated orgId from CSV Data Set Config</stringProp>
+          <collectionProp name="ModuleController.node_path">
+            <stringProp name="0">Test Plan</stringProp>
+            <stringProp name="1">epr-re-ex-performance-tests Performance Tests</stringProp>
+            <stringProp name="2">Frontend Journey Thread Group</stringProp>
+            <stringProp name="3">Form Submission Controller</stringProp>
+          </collectionProp>
+        </ModuleController>
+        <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin Edit Organisation page" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin Edit Organisation page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
@@ -7852,18 +7923,6 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV Data Set Config" enabled="true">
-          <stringProp name="delimiter">,</stringProp>
-          <stringProp name="fileEncoding"></stringProp>
-          <stringProp name="filename">testinput.csv</stringProp>
-          <boolProp name="ignoreFirstLine">false</boolProp>
-          <boolProp name="quotedData">false</boolProp>
-          <boolProp name="recycle">true</boolProp>
-          <stringProp name="shareMode">shareMode.all</stringProp>
-          <boolProp name="stopThread">false</boolProp>
-          <stringProp name="variableNames"></stringProp>
-        </CSVDataSet>
-        <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin View System Logs" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin View System Logs</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
