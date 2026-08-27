@@ -7834,12 +7834,12 @@ vars.put(&quot;jobTitle&quot;, jobTitle);
 vars.put(&quot;company&quot;, company);</stringProp>
         </BeanShellSampler>
         <hashTree/>
-        <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Form Submission Controller" enabled="true">
+        <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Admin Organisation Creation Lock" enabled="true">
           <stringProp name="CriticalSectionController.lockName">global_lock</stringProp>
         </CriticalSectionController>
         <hashTree>
           <ModuleController guiclass="ModuleControllerGui" testclass="ModuleController" testname="Create Organisation Module Controller" enabled="true">
-            <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Organisation Details HTTP Request (just the org-creation call, not Registration/Accreditation) to create a fresh organisation on the fly and extract its orgId, instead of reading a pre-generated orgId from CSV Data Set Config</stringProp>
+            <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Organisation Details HTTP Request (just the org-creation call, not Registration/Accreditation) to create a fresh organisation on the fly and extract its orgId/refNo, instead of reading a pre-generated orgId from CSV Data Set Config. NOTE: deliberately named differently from Frontend Journey&apos;s &quot;Form Submission Controller&quot; wrapper above - Module Controller resolves its target purely by tree-node name, and a duplicate name here previously caused the JMeter GUI to mis-save this reference as pointing at itself (infinite recursion / StackOverflowError). Keep this name unique.</stringProp>
             <collectionProp name="ModuleController.node_path">
               <stringProp name="0">Test Plan</stringProp>
               <stringProp name="1">epr-re-ex-performance-tests Performance Tests</stringProp>
@@ -7850,12 +7850,38 @@ vars.put(&quot;company&quot;, company);</stringProp>
           </ModuleController>
           <hashTree/>
         </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Migrate Organisation HTTP Request" enabled="true">
+          <stringProp name="TestPlan.comments">Persists the on-the-fly organisation created above into the queryable organisations store, mirroring the Frontend Journey&apos;s Migrate Organisation HTTP Request - without this, the Admin Edit/Update Organisation calls below 404 because the raw form submission was never migrated.</stringProp>
+          <stringProp name="HTTPSampler.domain">${EPR_BACKEND_HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${EPR_BACKEND_PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/v1/dev/form-submissions/${refNo}/migrate</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">200</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message"></stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">false</boolProp>
+            <intProp name="Assertion.test_type">2</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin Edit Organisation page" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin Edit Organisation page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7891,7 +7917,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7960,7 +7986,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/system-logs?referenceNumber=${orgId}</stringProp>
+          <stringProp name="HTTPSampler.path">/system-logs?referenceNumber=${refNo}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
