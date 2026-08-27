@@ -7834,16 +7834,22 @@ vars.put(&quot;jobTitle&quot;, jobTitle);
 vars.put(&quot;company&quot;, company);</stringProp>
         </BeanShellSampler>
         <hashTree/>
-        <ModuleController guiclass="ModuleControllerGui" testclass="ModuleController" testname="Create Organisation Module Controller" enabled="true">
-          <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Form Submission Controller to create a fresh organisation on the fly and extract its orgId, instead of reading a pre-generated orgId from CSV Data Set Config</stringProp>
-          <collectionProp name="ModuleController.node_path">
-            <stringProp name="0">Test Plan</stringProp>
-            <stringProp name="1">epr-re-ex-performance-tests Performance Tests</stringProp>
-            <stringProp name="2">Frontend Journey Thread Group</stringProp>
-            <stringProp name="3">Form Submission Controller</stringProp>
-          </collectionProp>
-        </ModuleController>
-        <hashTree/>
+        <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Form Submission Controller" enabled="true">
+          <stringProp name="CriticalSectionController.lockName">global_lock</stringProp>
+        </CriticalSectionController>
+        <hashTree>
+          <ModuleController guiclass="ModuleControllerGui" testclass="ModuleController" testname="Create Organisation Module Controller" enabled="true">
+            <stringProp name="TestPlan.comments">Reuses the Frontend Journey&apos;s Organisation Details HTTP Request (just the org-creation call, not Registration/Accreditation) to create a fresh organisation on the fly and extract its orgId, instead of reading a pre-generated orgId from CSV Data Set Config</stringProp>
+            <collectionProp name="ModuleController.node_path">
+              <stringProp name="0">Test Plan</stringProp>
+              <stringProp name="1">epr-re-ex-performance-tests Performance Tests</stringProp>
+              <stringProp name="2">Frontend Journey Thread Group</stringProp>
+              <stringProp name="3">Form Submission Controller</stringProp>
+              <stringProp name="4">Organisation Details HTTP Request</stringProp>
+            </collectionProp>
+          </ModuleController>
+          <hashTree/>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR RE EX Admin Edit Organisation page" enabled="true">
           <stringProp name="TestPlan.comments">EPR RE EX Admin Edit Organisation page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
