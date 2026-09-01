@@ -6068,7 +6068,6 @@ def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 
 payload.registrations[0].id = &quot;${registrationId}&quot;
 payload.registrations[0].validFrom = &quot;2026-01-01&quot;
-payload.registrations[0].validTo = &quot;2029-01-01&quot;
 payload.registrations[0].registrationNumber = &quot;R25SR500050912GO&quot;
 payload.registrations[0].reprocessingType = &quot;input&quot;
 payload.registrations[0].status = &quot;approved&quot;
