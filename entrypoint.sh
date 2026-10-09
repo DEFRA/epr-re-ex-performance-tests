@@ -20,17 +20,6 @@ SCENARIOFILE=${JM_SCENARIOS}/${TEST_SCENARIO}.jmx
 REPORTFILE=${NOW}-perftest-${TEST_SCENARIO}-report.csv
 LOGFILE=${JM_LOGS}/perftest-${TEST_SCENARIO}.log
 
-# Before running the suite, replace 'service-name' with the name/url of the service to test.
-# ENVIRONMENT is set to the name of th environment the test is running in.
-SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-service-name.${ENVIRONMENT}.cdp-int.defra.cloud}
-# PORT is used to set the port of this performance test container
-SERVICE_PORT=${SERVICE_PORT:-443}
-SERVICE_URL_SCHEME=${SERVICE_URL_SCHEME:-https}
-
-# Set THREAD_COUNT based on PROFILE. The Frontend and Admin Frontend journeys are
-# the primary emphasis of this suite and share THREAD_COUNT; the Backend API
-# journey runs at a reduced, independent BACKEND_THREAD_COUNT since its flows
-# largely overlap with the frontend journeys.
 if [ "$PROFILE" = "max" ]; then
     THREAD_COUNT=200
 elif [ "$PROFILE" = "mid" ]; then
@@ -38,16 +27,11 @@ elif [ "$PROFILE" = "mid" ]; then
 else
     THREAD_COUNT=50
 fi
-BACKEND_THREAD_COUNT=$((THREAD_COUNT / 5))
 
-# Run the test suite
+# Run the test suite - service hosts and ports are derived from env inside the scenario
 jmeter -n -t ${SCENARIOFILE} -e -l "${REPORTFILE}" -o ${JM_REPORTS} -j ${LOGFILE} -f \
 -Jenv="${ENVIRONMENT}" \
--Jdomain="${SERVICE_ENDPOINT}" \
--Jport="${SERVICE_PORT}" \
--Jprotocol="${SERVICE_URL_SCHEME}" \
 -JthreadCount="${THREAD_COUNT}" \
--JbackendThreadCount="${BACKEND_THREAD_COUNT}" \
 -JcognitoId="${COGNITO_CLIENT_ID}" \
 -JcognitoSecret="${COGNITO_CLIENT_SECRET}"
 test_exit_code=$?
