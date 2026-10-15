@@ -3,11 +3,10 @@
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="epr-re-ex-performance-tests Performance Tests">
       <stringProp name="TestPlan.comments">Merged performance suite combining the Frontend, Admin Frontend and Backend API journeys. Frontend and Admin Frontend are the primary emphasis (driven by the threadCount property); the Backend API journey runs at a reduced, independent backendThreadCount since its flows largely overlap with the frontend journeys.</stringProp>
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
-      <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
     </TestPlan>
     <hashTree>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group">
@@ -178,7 +177,7 @@ props.put(&quot;COGNITO_ACCESS_TOKEN&quot;, token)</stringProp>
           </hashTree>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Frontend Journey Thread Group">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Frontend Journey Thread Group" enabled="true">
         <stringProp name="ThreadGroup.num_threads">${__P(threadCount,1)}</stringProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -6066,9 +6065,14 @@ import groovy.json.JsonOutput
 def jsonSlurper = new JsonSlurper()
 def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 
+// Unique per-iteration registration/accreditation numbers, also written to the summary log spreadsheet before upload
+def numberSuffix = org.apache.commons.lang3.RandomStringUtils.randomNumeric(4)
+vars.put(&quot;registrationNumber&quot;, &quot;R26ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+vars.put(&quot;accreditationNumber&quot;, &quot;A26ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+
 payload.registrations[0].id = &quot;${registrationId}&quot;
 payload.registrations[0].validFrom = &quot;2026-01-01&quot;
-payload.registrations[0].registrationNumber = &quot;R25SR500050912GO&quot;
+payload.registrations[0].registrationNumber = vars.get(&quot;registrationNumber&quot;)
 payload.registrations[0].reprocessingType = &quot;input&quot;
 payload.registrations[0].status = &quot;approved&quot;
 payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: &quot;2026-01-01&quot;])
@@ -6077,7 +6081,7 @@ payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, update
 payload.accreditations[0].id = &quot;${accreditationId}&quot;
 payload.accreditations[0].validFrom = &quot;2026-01-01&quot;
 payload.accreditations[0].validTo = &quot;2029-01-01&quot;
-payload.accreditations[0].accreditationNumber = &quot;ACC5066791GO&quot;
+payload.accreditations[0].accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 payload.accreditations[0].reprocessingType = &quot;input&quot;
 payload.accreditations[0].status = &quot;approved&quot;
 payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: &quot;2026-01-01&quot;])
@@ -6450,12 +6454,12 @@ log.info(&quot;Crumb value: ${crumbValue}&quot;)</stringProp>
                 <stringProp name="Argument.name">crumb</stringProp>
                 <stringProp name="HTTPArgument.content_type">application/x-www-form-urlencoded</stringProp>
               </elementProp>
-              <elementProp name="organisationId" elementType="HTTPArgument">
+              <elementProp name="organisationNumber" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                <stringProp name="Argument.value">${organisationId}</stringProp>
+                <stringProp name="Argument.value">${orgId}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">organisationId</stringProp>
+                <stringProp name="Argument.name">organisationNumber</stringProp>
                 <stringProp name="HTTPArgument.content_type">application/x-www-form-urlencoded</stringProp>
               </elementProp>
             </collectionProp>
@@ -6501,7 +6505,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
             <intProp name="Assertion.test_type">2</intProp>
           </ResponseAssertion>
           <hashTree/>
-          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="RegistrationId Regular Expression Extractor" enabled="true">
+          <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="RegistrationId Regular Expression Extractor" enabled="false">
             <stringProp name="RegexExtractor.useHeaders">false</stringProp>
             <stringProp name="RegexExtractor.refname">registrationId</stringProp>
             <stringProp name="RegexExtractor.regex">/organisations/[a-f0-9]+/registrations/([a-f0-9]+)</stringProp>
@@ -6585,9 +6589,9 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
           <elementProp name="HTTPsampler.Files" elementType="HTTPFileArgs">
             <collectionProp name="HTTPFileArgs.files">
-              <elementProp name="spreadsheet.xlsx" elementType="HTTPFileArg">
+              <elementProp name="${summaryLogFile}" elementType="HTTPFileArg">
                 <stringProp name="File.mimetype">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</stringProp>
-                <stringProp name="File.path">spreadsheet.xlsx</stringProp>
+                <stringProp name="File.path">${summaryLogFile}</stringProp>
                 <stringProp name="File.paramname">summaryLogUpload</stringProp>
               </elementProp>
             </collectionProp>
@@ -6606,6 +6610,58 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
               </elementProp>
             </collectionProp>
           </HeaderManager>
+          <hashTree/>
+          <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Set Cover Registration/Accreditation Numbers PreProcessor" enabled="true">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="script">import org.apache.commons.io.FileUtils
+import org.apache.jmeter.services.FileServer
+
+// Build a per-thread copy of spreadsheet.xlsx with the Cover sheet (xl/worksheets/sheet1.xml)
+// Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation.
+// JDK classes are looked up via Class.forName because the Groovy 3 bundled with JMeter 5.6.3 cannot
+// compile direct references to them on newer JDKs (Java 24: &quot;Unsupported class file major version 68&quot;)
+def Files = Class.forName(&quot;java.nio.file.Files&quot;)
+def Paths = Class.forName(&quot;java.nio.file.Paths&quot;)
+def FileSystems = Class.forName(&quot;java.nio.file.FileSystems&quot;)
+def URI = Class.forName(&quot;java.net.URI&quot;)
+def REPLACE_EXISTING = Class.forName(&quot;java.nio.file.StandardCopyOption&quot;).REPLACE_EXISTING
+
+def registrationNumber = vars.get(&quot;registrationNumber&quot;)
+def accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
+
+def source = Paths.get(FileServer.getFileServer().getBaseDir(), &quot;spreadsheet.xlsx&quot;)
+def outputDir = Paths.get(FileUtils.getTempDirectoryPath(), &quot;epr-summary-logs&quot;, ctx.getThread().getThreadName().replaceAll(&quot;[^A-Za-z0-9_-]&quot;, &quot;_&quot;))
+Files.createDirectories(outputDir)
+def output = outputDir.resolve(&quot;spreadsheet.xlsx&quot;)
+Files.copy(source, output, REPLACE_EXISTING)
+
+// Replace the cell with an inline string, keeping its style
+def setInlineString = { String xml, String ref, String value -&gt;
+    def cell = xml =~ (&quot;(?s)&lt;c r=\&quot;&quot; + ref + &quot;\&quot;([^&gt;]*?)(/&gt;|&gt;.*?&lt;/c&gt;)&quot;)
+    assert cell.find() : &quot;Cell &quot; + ref + &quot; not found on Cover sheet&quot;
+    def style = cell.group(1) =~ &quot;\\ss=\&quot;[^\&quot;]*\&quot;&quot;
+    def styleAttr = style.find() ? style.group() : &quot;&quot;
+    def replacement = &quot;&lt;c r=\&quot;&quot; + ref + &quot;\&quot;&quot; + styleAttr + &quot; t=\&quot;inlineStr\&quot;&gt;&lt;is&gt;&lt;t&gt;&quot; + value + &quot;&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;&quot;
+    return xml.substring(0, cell.start()) + replacement + xml.substring(cell.end())
+}
+
+// zipfs only rewrites the modified entry, unchanged entries are copied without recompression
+def zipFs = FileSystems.newFileSystem(URI.create(&quot;jar:&quot; + output.toUri()), [:])
+try {
+    def coverSheet = zipFs.getPath(&quot;xl/worksheets/sheet1.xml&quot;)
+    def xml = new String(Files.readAllBytes(coverSheet), &quot;UTF-8&quot;)
+    xml = setInlineString(xml, &quot;E10&quot;, registrationNumber)
+    xml = setInlineString(xml, &quot;E13&quot;, accreditationNumber)
+    Files.write(coverSheet, xml.getBytes(&quot;UTF-8&quot;))
+} finally {
+    zipFs.close()
+}
+
+vars.put(&quot;summaryLogFile&quot;, output.toString())</stringProp>
+          </JSR223PreProcessor>
           <hashTree/>
           <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Redirect URL Regular Expression Extractor" enabled="true">
             <stringProp name="RegexExtractor.useHeaders">true</stringProp>
@@ -6628,9 +6684,9 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           <boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
           <elementProp name="HTTPsampler.Files" elementType="HTTPFileArgs">
             <collectionProp name="HTTPFileArgs.files">
-              <elementProp name="spreadsheet.xlsx" elementType="HTTPFileArg">
+              <elementProp name="${summaryLogFile}" elementType="HTTPFileArg">
                 <stringProp name="File.mimetype">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</stringProp>
-                <stringProp name="File.path">spreadsheet.xlsx</stringProp>
+                <stringProp name="File.path">${summaryLogFile}</stringProp>
                 <stringProp name="File.paramname">summaryLogUpload</stringProp>
               </elementProp>
             </collectionProp>
@@ -6661,11 +6717,11 @@ vars.put(&quot;page_status&quot;, &quot;NOT_FOUND&quot;)
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Upload">
+        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Upload" enabled="true">
           <stringProp name="WhileController.condition">${__groovy(vars.get(&quot;page_status&quot;).equals(&quot;NOT_FOUND&quot;) &amp;&amp; vars.getObject(&quot;poll_count&quot;).toInteger() &lt; 120)}</stringProp>
         </WhileController>
         <hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload confirmation page">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload confirmation page" enabled="true">
             <stringProp name="TestPlan.comments">EPR Summary Log upload confirmation page</stringProp>
             <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
             <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6701,12 +6757,12 @@ vars.put(&quot;page_status&quot;, &quot;NOT_FOUND&quot;)
             </RegexExtractor>
             <hashTree/>
           </hashTree>
-          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer">
+          <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer" enabled="true">
             <stringProp name="ConstantTimer.delay">1000</stringProp>
             <stringProp name="TestPlan.comments">Delay between Summary Log status polling</stringProp>
           </ConstantTimer>
           <hashTree/>
-          <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Loop counter PostProcessor">
+          <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Loop counter PostProcessor" enabled="true">
             <stringProp name="cacheKey">true</stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="parameters"></stringProp>
@@ -6729,7 +6785,7 @@ vars.put(&quot;uploaded_status&quot;, &quot;NOT_FOUND&quot;)</stringProp>
           </JSR223PostProcessor>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload submission page">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="EPR Summary Log upload submission page" enabled="true">
           <stringProp name="TestPlan.comments">EPR Summary Log upload submission page</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
@@ -6764,7 +6820,7 @@ vars.put(&quot;uploaded_status&quot;, &quot;NOT_FOUND&quot;)</stringProp>
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Submission Page">
+        <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="Poll Summary Log Submission Page" enabled="true">
           <stringProp name="WhileController.condition">${__groovy(vars.get(&quot;uploaded_status&quot;).equals(&quot;NOT_FOUND&quot;) &amp;&amp; vars.getObject(&quot;submission_poll_count&quot;).toInteger() &lt; 120)}</stringProp>
         </WhileController>
         <hashTree>
@@ -7126,7 +7182,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/reports/2026/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7152,7 +7208,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/reports/2026/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7499,7 +7555,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/reports/2026/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7525,7 +7581,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/reports/2026/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7582,7 +7638,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Admin Frontend Journey Thread Group">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Admin Frontend Journey Thread Group" enabled="true">
         <stringProp name="ThreadGroup.num_threads">${__P(threadCount,10)}</stringProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
