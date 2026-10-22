@@ -45,6 +45,8 @@ jmeter -n -t scenarios/epr-re-ex-test.jmx -l report.csv -Jenv=local -JthreadCoun
 
 Without `-JthreadCount` the scenario falls back to 1 frontend thread and 10 admin frontend threads.
 
+`-JaccreditationYear` (default `2026`) sets the year of the seeded registration/accreditation and the `accreditations/{year}` segment of frontend URLs. The dates in `scenarios/spreadsheet.xlsx` must fall in the same year.
+
 ## Licence
 
 THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:

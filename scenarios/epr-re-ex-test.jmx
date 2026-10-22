@@ -5,7 +5,14 @@
       <stringProp name="TestPlan.comments">Merged performance suite combining the Frontend, Admin Frontend and Backend API journeys. Frontend and Admin Frontend are the primary emphasis (driven by the threadCount property); the Backend API journey runs at a reduced, independent backendThreadCount since its flows largely overlap with the frontend journeys.</stringProp>
       <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
-        <collectionProp name="Arguments.arguments"/>
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="accreditationYear" elementType="Argument">
+            <stringProp name="Argument.name">accreditationYear</stringProp>
+            <stringProp name="Argument.value">${__P(accreditationYear,2026)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+            <stringProp name="Argument.desc">Year of the seeded registration/accreditation; drives the natural-key frontend URLs and seed data dates/numbers. Must match the dates in spreadsheet.xlsx.</stringProp>
+          </elementProp>
+        </collectionProp>
       </elementProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
     </TestPlan>
@@ -6068,27 +6075,29 @@ def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 
 // Unique per-iteration registration/accreditation numbers, also written to the summary log spreadsheet before upload
 def numberSuffix = org.apache.commons.lang3.RandomStringUtils.randomNumeric(4)
-vars.put(&quot;registrationNumber&quot;, &quot;R26ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
-vars.put(&quot;accreditationNumber&quot;, &quot;A26ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+def year = vars.get(&quot;accreditationYear&quot;)
+def yy = year.substring(2)
+vars.put(&quot;registrationNumber&quot;, &quot;R&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+vars.put(&quot;accreditationNumber&quot;, &quot;A&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
 
 payload.registrations[0].id = &quot;${registrationId}&quot;
-payload.registrations[0].validFrom = &quot;2026-01-01&quot;
+payload.registrations[0].validFrom = year + &quot;-01-01&quot;
 payload.registrations[0].registrationNumber = vars.get(&quot;registrationNumber&quot;)
 payload.registrations[0].reprocessingType = &quot;input&quot;
 payload.registrations[0].status = &quot;approved&quot;
-payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: &quot;2026-01-01&quot;])
+payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
 
 
 payload.accreditations[0].id = &quot;${accreditationId}&quot;
-payload.accreditations[0].validFrom = &quot;2026-01-01&quot;
-payload.accreditations[0].validTo = &quot;2029-01-01&quot;
+payload.accreditations[0].validFrom = year + &quot;-01-01&quot;
+payload.accreditations[0].validTo = (year.toInteger() + 3) + &quot;-01-01&quot;
 payload.accreditations[0].accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 payload.accreditations[0].reprocessingType = &quot;input&quot;
 payload.accreditations[0].status = &quot;approved&quot;
-payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: &quot;2026-01-01&quot;])
+payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
 
 payload.submitterContactDetails.email = &quot;${email}&quot;
-payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: &quot;2026-01-01&quot;])
+payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
 payload.status = &quot;approved&quot;
 
 
@@ -6890,7 +6899,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/create</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/packaging-recycling-notes/create</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -6927,7 +6936,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/create</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/packaging-recycling-notes/create</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7038,7 +7047,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/packaging-recycling-notes</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7064,7 +7073,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/${prnId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/packaging-recycling-notes/${prnId}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7090,7 +7099,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/${prnId}/issue</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/packaging-recycling-notes/${prnId}/issue</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7183,7 +7192,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7209,7 +7218,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7556,7 +7565,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7582,7 +7591,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
