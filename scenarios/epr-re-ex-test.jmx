@@ -7,6 +7,7 @@
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
     </TestPlan>
     <hashTree>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Backend API - Setup (Cognito Auth) Thread Group">
@@ -6889,7 +6890,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/accreditations/${accreditationId}/packaging-recycling-notes/create</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/create</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -6926,7 +6927,7 @@ if (status == &quot;NOT_FOUND&quot;) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/accreditations/${accreditationId}/packaging-recycling-notes/create</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/create</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -6941,12 +6942,12 @@ if (status == &quot;NOT_FOUND&quot;) {
                 <stringProp name="Argument.name">crumb</stringProp>
                 <stringProp name="HTTPArgument.content_type">application/x-www-form-urlencoded</stringProp>
               </elementProp>
-              <elementProp name="nation" elementType="HTTPArgument">
+              <elementProp name="isDecemberWaste" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                <stringProp name="Argument.value">england</stringProp>
+                <stringProp name="Argument.value">false</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">nation</stringProp>
+                <stringProp name="Argument.name">isDecemberWaste</stringProp>
                 <stringProp name="HTTPArgument.content_type">application/x-www-form-urlencoded</stringProp>
               </elementProp>
               <elementProp name="wasteProcessingType" elementType="HTTPArgument">
@@ -7037,7 +7038,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/accreditations/${accreditationId}/packaging-recycling-notes</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7063,7 +7064,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/accreditations/${accreditationId}/packaging-recycling-notes/${prnId}</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/${prnId}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7089,7 +7090,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/accreditations/${accreditationId}/packaging-recycling-notes/${prnId}/issue</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/2026/packaging-recycling-notes/${prnId}/issue</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -8063,7 +8064,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
           <hashTree/>
         </hashTree>
       </hashTree>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -8100,7 +8101,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -8137,7 +8138,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
         <stringProp name="filename">report.csv</stringProp>
       </ResultCollector>
       <hashTree/>
-      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments">
           <elementProp name="HTTP_PROTOCOL" elementType="Argument">
             <stringProp name="Argument.name">HTTP_PROTOCOL</stringProp>
