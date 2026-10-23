@@ -8078,7 +8078,7 @@ vars.put(&quot;company&quot;, company);</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_ADMIN_FE_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_ADMIN_FE_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/system-logs?referenceNumber=${refNo}</stringProp>
+          <stringProp name="HTTPSampler.path">/system-logs?organisationNumber=${orgId}</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
