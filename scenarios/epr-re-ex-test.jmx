@@ -6090,7 +6090,7 @@ payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, update
 
 payload.accreditations[0].id = &quot;${accreditationId}&quot;
 payload.accreditations[0].validFrom = year + &quot;-01-01&quot;
-payload.accreditations[0].validTo = (year.toInteger() + 3) + &quot;-01-01&quot;
+payload.accreditations[0].validTo = year + &quot;-12-31&quot;
 payload.accreditations[0].accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 payload.accreditations[0].reprocessingType = &quot;input&quot;
 payload.accreditations[0].status = &quot;approved&quot;
