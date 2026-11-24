@@ -10,7 +10,7 @@
             <stringProp name="Argument.name">accreditationYear</stringProp>
             <stringProp name="Argument.value">${__P(accreditationYear,${__timeShift(yyyy,,P-31D,,)})}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
-            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against and reported on; drives the natural-key frontend URLs and the accreditation number. Defaults to the year a month ago, the one year in which both the January report and PRNs are open. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. The load dates in spreadsheet.xlsx are moved to January of this year before upload.</stringProp>
+            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against and reported on; drives the natural-key frontend URLs and the accreditation number. Defaults to the year a month ago, the one year in which both the January report and PRNs are open. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. Only 2026 and 2027 have a summary log workbook, scenarios/summary-log-{year}.xlsx, with loads dated in January.</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
@@ -6076,6 +6076,10 @@ def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 // The backend stores registrations and accreditations dated in 2026 only. The registration runs on from 2026,
 // and an accreditation for a later year is seeded in the PUT External Accreditation request that follows.
 def STORED_YEAR = &quot;2026&quot;
+vars.put(&quot;storedAccreditationYear&quot;, STORED_YEAR)
+
+def SUMMARY_LOG_YEARS = [&quot;2026&quot;, &quot;2027&quot;]
+assert SUMMARY_LOG_YEARS.contains(vars.get(&quot;accreditationYear&quot;)) : &quot;accreditationYear must be one of &quot; + SUMMARY_LOG_YEARS + &quot;, the years with a summary log workbook in scenarios/&quot;
 
 // Unique per-iteration registration/accreditation numbers, also written to the summary log spreadsheet before upload
 def numberSuffix = org.apache.commons.lang3.RandomStringUtils.randomNumeric(4)
@@ -6121,7 +6125,7 @@ vars.put(&quot;modifiedPayload&quot;, JsonOutput.toJson(payload))</stringProp>
             <hashTree/>
           </hashTree>
           <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Accreditation Year Not Stored" enabled="true">
-            <stringProp name="IfController.condition">${__groovy(vars.get(&quot;accreditationYear&quot;) != &quot;2026&quot;,)}</stringProp>
+            <stringProp name="IfController.condition">${__groovy(vars.get(&quot;accreditationYear&quot;) != vars.get(&quot;storedAccreditationYear&quot;),)}</stringProp>
             <boolProp name="IfController.evaluateAll">false</boolProp>
             <boolProp name="IfController.useExpression">true</boolProp>
           </IfController>
@@ -6616,7 +6620,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/summary-logs/upload</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/summary-logs/upload</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -6688,9 +6692,9 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
             <stringProp name="script">import org.apache.commons.io.FileUtils
 import org.apache.jmeter.services.FileServer
 
-// Build a per-thread copy of spreadsheet.xlsx with the Cover sheet (xl/worksheets/sheet1.xml)
-// Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation,
-// and the data sheets&apos; load dates moved to January of accreditationYear, the month the scenario reports on.
+// Build a per-thread copy of the summary log workbook for accreditationYear, whose loads are dated in January,
+// the month the scenario reports on, with the Cover sheet (xl/worksheets/sheet1.xml)
+// Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation.
 // JDK classes are looked up via Class.forName because the Groovy 3 bundled with JMeter 5.6.3 cannot
 // compile direct references to them on newer JDKs (Java 24: &quot;Unsupported class file major version 68&quot;)
 def Files = Class.forName(&quot;java.nio.file.Files&quot;)
@@ -6702,9 +6706,8 @@ def REPLACE_EXISTING = Class.forName(&quot;java.nio.file.StandardCopyOption&quot
 def registrationNumber = vars.get(&quot;registrationNumber&quot;)
 def accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 
-def accreditationYear = vars.get(&quot;accreditationYear&quot;).toInteger()
-
-def source = Paths.get(FileServer.getFileServer().getBaseDir(), &quot;spreadsheet.xlsx&quot;)
+def workbook = &quot;summary-log-&quot; + vars.get(&quot;accreditationYear&quot;) + &quot;.xlsx&quot;
+def source = Paths.get(FileServer.getFileServer().getBaseDir(), workbook)
 def outputDir = Paths.get(FileUtils.getTempDirectoryPath(), &quot;epr-summary-logs&quot;, ctx.getThread().getThreadName().replaceAll(&quot;[^A-Za-z0-9_-]&quot;, &quot;_&quot;))
 Files.createDirectories(outputDir)
 def output = outputDir.resolve(&quot;spreadsheet.xlsx&quot;)
@@ -6720,20 +6723,6 @@ def setInlineString = { String xml, String ref, String value -&gt;
     return xml.substring(0, cell.start()) + replacement + xml.substring(cell.end())
 }
 
-// Move the date serials in column G from row 4 down (row 3 is the template&apos;s example row) to January of
-// accreditationYear, keeping the day of month and time of day
-def LocalDate = Class.forName(&quot;java.time.LocalDate&quot;)
-def EXCEL_EPOCH = LocalDate.of(1899, 12, 30)
-def moveDatesToJanuary = { String xml -&gt;
-    xml.replaceAll(/&lt;c r=&quot;G(\d+)&quot;([^&gt;]*?) t=&quot;n&quot;&gt;&lt;v&gt;([0-9.]+)&lt;\/v&gt;/) { all, row, attrs, serial -&gt;
-        if (row.toInteger() &lt; 4) return all
-        def value = new BigDecimal(serial)
-        def date = EXCEL_EPOCH.plusDays(value.longValue())
-        def dayShift = date.withYear(accreditationYear).withMonth(1).toEpochDay() - date.toEpochDay()
-        return &quot;&lt;c r=\&quot;G&quot; + row + &quot;\&quot;&quot; + attrs + &quot; t=\&quot;n\&quot;&gt;&lt;v&gt;&quot; + value.add(BigDecimal.valueOf(dayShift)).toPlainString() + &quot;&lt;/v&gt;&quot;
-    }
-}
-
 // zipfs only rewrites the modified entry, unchanged entries are copied without recompression
 def zipFs = FileSystems.newFileSystem(URI.create(&quot;jar:&quot; + output.toUri()), [:])
 try {
@@ -6742,12 +6731,6 @@ try {
     xml = setInlineString(xml, &quot;E10&quot;, registrationNumber)
     xml = setInlineString(xml, &quot;E13&quot;, accreditationNumber)
     Files.write(coverSheet, xml.getBytes(&quot;UTF-8&quot;))
-
-    // Received, Reprocessed and Sent on sheets
-    [&quot;sheet2&quot;, &quot;sheet3&quot;, &quot;sheet4&quot;].each { name -&gt;
-        def sheet = zipFs.getPath(&quot;xl/worksheets/&quot; + name + &quot;.xml&quot;)
-        Files.write(sheet, moveDatesToJanuary(new String(Files.readAllBytes(sheet), &quot;UTF-8&quot;)).getBytes(&quot;UTF-8&quot;))
-    }
 } finally {
     zipFs.close()
 }
