@@ -8,9 +8,9 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="accreditationYear" elementType="Argument">
             <stringProp name="Argument.name">accreditationYear</stringProp>
-            <stringProp name="Argument.value">${__P(accreditationYear,2027)}</stringProp>
+            <stringProp name="Argument.value">${__P(accreditationYear,${__timeShift(yyyy,,P-31D,,)})}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
-            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against; drives the natural-key frontend URLs and the accreditation number. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. The 2026 load dates in spreadsheet.xlsx are shifted to this year before upload.</stringProp>
+            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against and reported on; drives the natural-key frontend URLs and the accreditation number. Defaults to the year a month ago, the one year in which both the January report and PRNs are open. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. The load dates in spreadsheet.xlsx are moved to January of this year before upload.</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
@@ -6690,7 +6690,7 @@ import org.apache.jmeter.services.FileServer
 
 // Build a per-thread copy of spreadsheet.xlsx with the Cover sheet (xl/worksheets/sheet1.xml)
 // Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation,
-// and the data sheets&apos; load dates moved from 2026 to accreditationYear.
+// and the data sheets&apos; load dates moved to January of accreditationYear, the month the scenario reports on.
 // JDK classes are looked up via Class.forName because the Groovy 3 bundled with JMeter 5.6.3 cannot
 // compile direct references to them on newer JDKs (Java 24: &quot;Unsupported class file major version 68&quot;)
 def Files = Class.forName(&quot;java.nio.file.Files&quot;)
@@ -6702,9 +6702,7 @@ def REPLACE_EXISTING = Class.forName(&quot;java.nio.file.StandardCopyOption&quot
 def registrationNumber = vars.get(&quot;registrationNumber&quot;)
 def accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 
-// Year of the load dates in spreadsheet.xlsx
-def SPREADSHEET_YEAR = 2026
-def yearOffset = vars.get(&quot;accreditationYear&quot;).toInteger() - SPREADSHEET_YEAR
+def accreditationYear = vars.get(&quot;accreditationYear&quot;).toInteger()
 
 def source = Paths.get(FileServer.getFileServer().getBaseDir(), &quot;spreadsheet.xlsx&quot;)
 def outputDir = Paths.get(FileUtils.getTempDirectoryPath(), &quot;epr-summary-logs&quot;, ctx.getThread().getThreadName().replaceAll(&quot;[^A-Za-z0-9_-]&quot;, &quot;_&quot;))
@@ -6722,16 +6720,16 @@ def setInlineString = { String xml, String ref, String value -&gt;
     return xml.substring(0, cell.start()) + replacement + xml.substring(cell.end())
 }
 
-// Shift the date serials in column G from row 4 down (row 3 is the template&apos;s example row) by yearOffset years,
-// keeping the day of month and time of day
+// Move the date serials in column G from row 4 down (row 3 is the template&apos;s example row) to January of
+// accreditationYear, keeping the day of month and time of day
 def LocalDate = Class.forName(&quot;java.time.LocalDate&quot;)
 def EXCEL_EPOCH = LocalDate.of(1899, 12, 30)
-def shiftDates = { String xml -&gt;
+def moveDatesToJanuary = { String xml -&gt;
     xml.replaceAll(/&lt;c r=&quot;G(\d+)&quot;([^&gt;]*?) t=&quot;n&quot;&gt;&lt;v&gt;([0-9.]+)&lt;\/v&gt;/) { all, row, attrs, serial -&gt;
         if (row.toInteger() &lt; 4) return all
         def value = new BigDecimal(serial)
         def date = EXCEL_EPOCH.plusDays(value.longValue())
-        def dayShift = date.plusYears(yearOffset).toEpochDay() - date.toEpochDay()
+        def dayShift = date.withYear(accreditationYear).withMonth(1).toEpochDay() - date.toEpochDay()
         return &quot;&lt;c r=\&quot;G&quot; + row + &quot;\&quot;&quot; + attrs + &quot; t=\&quot;n\&quot;&gt;&lt;v&gt;&quot; + value.add(BigDecimal.valueOf(dayShift)).toPlainString() + &quot;&lt;/v&gt;&quot;
     }
 }
@@ -6745,12 +6743,10 @@ try {
     xml = setInlineString(xml, &quot;E13&quot;, accreditationNumber)
     Files.write(coverSheet, xml.getBytes(&quot;UTF-8&quot;))
 
-    // Received, Reprocessed and Sent on sheets; skipped for the default year to avoid recompressing them every iteration
-    if (yearOffset != 0) {
-        [&quot;sheet2&quot;, &quot;sheet3&quot;, &quot;sheet4&quot;].each { name -&gt;
-            def sheet = zipFs.getPath(&quot;xl/worksheets/&quot; + name + &quot;.xml&quot;)
-            Files.write(sheet, shiftDates(new String(Files.readAllBytes(sheet), &quot;UTF-8&quot;)).getBytes(&quot;UTF-8&quot;))
-        }
+    // Received, Reprocessed and Sent on sheets
+    [&quot;sheet2&quot;, &quot;sheet3&quot;, &quot;sheet4&quot;].each { name -&gt;
+        def sheet = zipFs.getPath(&quot;xl/worksheets/&quot; + name + &quot;.xml&quot;)
+        Files.write(sheet, moveDatesToJanuary(new String(Files.readAllBytes(sheet), &quot;UTF-8&quot;)).getBytes(&quot;UTF-8&quot;))
     }
 } finally {
     zipFs.close()
@@ -7278,7 +7274,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7304,7 +7300,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7651,7 +7647,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7677,7 +7673,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
