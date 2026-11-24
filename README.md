@@ -45,7 +45,9 @@ jmeter -n -t scenarios/epr-re-ex-test.jmx -l report.csv -Jenv=local -JthreadCoun
 
 Without `-JthreadCount` the scenario falls back to 1 frontend thread and 10 admin frontend threads.
 
-`-JaccreditationYear` (default `2026`) sets the year of the seeded registration/accreditation and the `accreditations/{year}` segment of frontend URLs. The 2026 load dates in `scenarios/spreadsheet.xlsx` are shifted to that year before upload. The backend stores accreditations for 2026 only, so any other year fails at the seeding step.
+`-JaccreditationYear` (default `2027`) sets the year of the accreditation that PRNs are issued against, and the `accreditations/{year}` segment of frontend URLs. The 2026 load dates in `scenarios/spreadsheet.xlsx` are shifted to that year before upload.
+
+The backend stores registrations and accreditations for 2026 only, so the seeded registration always runs from 2026 with a stored 2026 accreditation. For 2027 the scenario also seeds an accreditation through the backend's `PUT /v1/dev/external-accreditations/{registrationNumber}/2027` dev route. The backend serves that accreditation only while it reads 2027 accreditations from its `external-accreditations` collection, which it does while `FEATURE_FLAG_REG_ACCRED_EXTERNAL_ACCREDITATIONS` is off. If that flag is switched on in an environment, this step must change before the scenario can run there. A 2027 run before 1 January 2027 also needs `OPEN_NEXT_YEAR=true` on the backend.
 
 ## Licence
 

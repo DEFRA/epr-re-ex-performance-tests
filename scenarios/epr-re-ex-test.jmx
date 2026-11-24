@@ -8,9 +8,9 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="accreditationYear" elementType="Argument">
             <stringProp name="Argument.name">accreditationYear</stringProp>
-            <stringProp name="Argument.value">${__P(accreditationYear,2026)}</stringProp>
+            <stringProp name="Argument.value">${__P(accreditationYear,2027)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
-            <stringProp name="Argument.desc">Year of the seeded registration/accreditation; drives the natural-key frontend URLs and seed data dates/numbers. The 2026 load dates in spreadsheet.xlsx are shifted to this year before upload.</stringProp>
+            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against; drives the natural-key frontend URLs and the accreditation number. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. The 2026 load dates in spreadsheet.xlsx are shifted to this year before upload.</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
@@ -6073,31 +6073,34 @@ import groovy.json.JsonOutput
 def jsonSlurper = new JsonSlurper()
 def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 
+// The backend stores registrations and accreditations dated in 2026 only. The registration runs on from 2026,
+// and an accreditation for a later year is seeded in the PUT External Accreditation request that follows.
+def STORED_YEAR = &quot;2026&quot;
+
 // Unique per-iteration registration/accreditation numbers, also written to the summary log spreadsheet before upload
 def numberSuffix = org.apache.commons.lang3.RandomStringUtils.randomNumeric(4)
-def year = vars.get(&quot;accreditationYear&quot;)
-def yy = year.substring(2)
-vars.put(&quot;registrationNumber&quot;, &quot;R&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
-vars.put(&quot;accreditationNumber&quot;, &quot;A&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+def numberFor = { String prefix, String year -&gt; prefix + year.substring(2) + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot; }
+vars.put(&quot;registrationNumber&quot;, numberFor(&quot;R&quot;, STORED_YEAR))
+vars.put(&quot;accreditationNumber&quot;, numberFor(&quot;A&quot;, vars.get(&quot;accreditationYear&quot;)))
 
 payload.registrations[0].id = &quot;${registrationId}&quot;
-payload.registrations[0].validFrom = year + &quot;-01-01&quot;
+payload.registrations[0].validFrom = STORED_YEAR + &quot;-01-01&quot;
 payload.registrations[0].registrationNumber = vars.get(&quot;registrationNumber&quot;)
 payload.registrations[0].reprocessingType = &quot;input&quot;
 payload.registrations[0].status = &quot;approved&quot;
-payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 
 
 payload.accreditations[0].id = &quot;${accreditationId}&quot;
-payload.accreditations[0].validFrom = year + &quot;-01-01&quot;
-payload.accreditations[0].validTo = year + &quot;-12-31&quot;
-payload.accreditations[0].accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
+payload.accreditations[0].validFrom = STORED_YEAR + &quot;-01-01&quot;
+payload.accreditations[0].validTo = STORED_YEAR + &quot;-12-31&quot;
+payload.accreditations[0].accreditationNumber = numberFor(&quot;A&quot;, STORED_YEAR)
 payload.accreditations[0].reprocessingType = &quot;input&quot;
 payload.accreditations[0].status = &quot;approved&quot;
-payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 
 payload.submitterContactDetails.email = &quot;${email}&quot;
-payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 payload.status = &quot;approved&quot;
 
 
@@ -6116,6 +6119,62 @@ vars.put(&quot;modifiedPayload&quot;, JsonOutput.toJson(payload))</stringProp>
               <intProp name="Assertion.test_type">2</intProp>
             </ResponseAssertion>
             <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Accreditation Year Not Stored" enabled="true">
+            <stringProp name="IfController.condition">${__groovy(vars.get(&quot;accreditationYear&quot;) != &quot;2026&quot;,)}</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT External Accreditation HTTP Request" enabled="true">
+              <stringProp name="TestPlan.comments">An accreditation after 2026 comes from the registration service. This dev route stands in for it, and holds only while the backend reads those accreditations from its external-accreditations collection, as it does with Reg Accred switched off.</stringProp>
+              <stringProp name="HTTPSampler.domain">${EPR_BACKEND_HOST}</stringProp>
+              <stringProp name="HTTPSampler.port">${EPR_BACKEND_PORT}</stringProp>
+              <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
+              <stringProp name="HTTPSampler.path">/v1/dev/external-accreditations/${registrationNumber}/${accreditationYear}</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">PUT</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{
+  &quot;organisationNumber&quot;: &quot;${orgId}&quot;,
+  &quot;accreditationNumber&quot;: &quot;${accreditationNumber}&quot;,
+  &quot;prnIssuance&quot;: { &quot;tonnageBand&quot;: &quot;up_to_500&quot; },
+  &quot;status&quot;: {
+    &quot;lastUpdatedAt&quot;: &quot;${accreditationYear}-01-01T00:00:00.000Z&quot;,
+    &quot;timeline&quot;: [{ &quot;status&quot;: &quot;approved&quot;, &quot;at&quot;: &quot;${accreditationYear}-01-01T00:00:00.000Z&quot; }]
+  }
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                <collectionProp name="HeaderManager.headers">
+                  <elementProp name="" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </HeaderManager>
+              <hashTree/>
+              <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+                <collectionProp name="Asserion.test_strings">
+                  <stringProp name="49586">200</stringProp>
+                </collectionProp>
+                <stringProp name="Assertion.custom_message"></stringProp>
+                <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+                <boolProp name="Assertion.assume_success">false</boolProp>
+                <intProp name="Assertion.test_type">2</intProp>
+              </ResponseAssertion>
+              <hashTree/>
+            </hashTree>
           </hashTree>
         </hashTree>
         <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Defra ID Stub Controller" enabled="true">
