@@ -8,9 +8,9 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="accreditationYear" elementType="Argument">
             <stringProp name="Argument.name">accreditationYear</stringProp>
-            <stringProp name="Argument.value">${__P(accreditationYear,2026)}</stringProp>
+            <stringProp name="Argument.value">${__P(accreditationYear,${__timeShift(yyyy,,P-31D,,)})}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
-            <stringProp name="Argument.desc">Year of the seeded registration/accreditation; drives the natural-key frontend URLs and seed data dates/numbers. The 2026 load dates in spreadsheet.xlsx are shifted to this year before upload.</stringProp>
+            <stringProp name="Argument.desc">Year of the accreditation PRNs are issued against and reported on; drives the natural-key frontend URLs and the accreditation number. Defaults to the year a month ago, the one year in which both the January report and PRNs are open. 2026 uses the stored accreditation, 2027 one seeded through the backend dev route. Only 2026 and 2027 have a summary log workbook, scenarios/summary-log-{year}.xlsx, with loads dated in January.</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
@@ -6073,31 +6073,38 @@ import groovy.json.JsonOutput
 def jsonSlurper = new JsonSlurper()
 def payload = jsonSlurper.parseText(vars.get(&quot;jsonPayload&quot;))
 
+// The backend stores registrations and accreditations dated in 2026 only. The registration runs on from 2026,
+// and an accreditation for a later year is seeded in the PUT External Accreditation request that follows.
+def STORED_YEAR = &quot;2026&quot;
+vars.put(&quot;storedAccreditationYear&quot;, STORED_YEAR)
+
+def SUMMARY_LOG_YEARS = [&quot;2026&quot;, &quot;2027&quot;]
+assert SUMMARY_LOG_YEARS.contains(vars.get(&quot;accreditationYear&quot;)) : &quot;accreditationYear must be one of &quot; + SUMMARY_LOG_YEARS + &quot;, the years with a summary log workbook in scenarios/&quot;
+
 // Unique per-iteration registration/accreditation numbers, also written to the summary log spreadsheet before upload
 def numberSuffix = org.apache.commons.lang3.RandomStringUtils.randomNumeric(4)
-def year = vars.get(&quot;accreditationYear&quot;)
-def yy = year.substring(2)
-vars.put(&quot;registrationNumber&quot;, &quot;R&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
-vars.put(&quot;accreditationNumber&quot;, &quot;A&quot; + yy + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot;)
+def numberFor = { String prefix, String year -&gt; prefix + year.substring(2) + &quot;ER&quot; + vars.get(&quot;orgId&quot;) + numberSuffix + &quot;GO&quot; }
+vars.put(&quot;registrationNumber&quot;, numberFor(&quot;R&quot;, STORED_YEAR))
+vars.put(&quot;accreditationNumber&quot;, numberFor(&quot;A&quot;, vars.get(&quot;accreditationYear&quot;)))
 
 payload.registrations[0].id = &quot;${registrationId}&quot;
-payload.registrations[0].validFrom = year + &quot;-01-01&quot;
+payload.registrations[0].validFrom = STORED_YEAR + &quot;-01-01&quot;
 payload.registrations[0].registrationNumber = vars.get(&quot;registrationNumber&quot;)
 payload.registrations[0].reprocessingType = &quot;input&quot;
 payload.registrations[0].status = &quot;approved&quot;
-payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.registrations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 
 
 payload.accreditations[0].id = &quot;${accreditationId}&quot;
-payload.accreditations[0].validFrom = year + &quot;-01-01&quot;
-payload.accreditations[0].validTo = year + &quot;-12-31&quot;
-payload.accreditations[0].accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
+payload.accreditations[0].validFrom = STORED_YEAR + &quot;-01-01&quot;
+payload.accreditations[0].validTo = STORED_YEAR + &quot;-12-31&quot;
+payload.accreditations[0].accreditationNumber = numberFor(&quot;A&quot;, STORED_YEAR)
 payload.accreditations[0].reprocessingType = &quot;input&quot;
 payload.accreditations[0].status = &quot;approved&quot;
-payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.accreditations[0].statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 
 payload.submitterContactDetails.email = &quot;${email}&quot;
-payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: year + &quot;-01-01&quot;])
+payload.statusHistory.add([status: &quot;approved&quot;, updatedAt: STORED_YEAR + &quot;-01-01&quot;])
 payload.status = &quot;approved&quot;
 
 
@@ -6116,6 +6123,62 @@ vars.put(&quot;modifiedPayload&quot;, JsonOutput.toJson(payload))</stringProp>
               <intProp name="Assertion.test_type">2</intProp>
             </ResponseAssertion>
             <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Accreditation Year Not Stored" enabled="true">
+            <stringProp name="IfController.condition">${__groovy(vars.get(&quot;accreditationYear&quot;) != vars.get(&quot;storedAccreditationYear&quot;),)}</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT External Accreditation HTTP Request" enabled="true">
+              <stringProp name="TestPlan.comments">An accreditation after 2026 comes from the registration service. This dev route stands in for it, and holds only while the backend reads those accreditations from its external-accreditations collection, as it does with Reg Accred switched off.</stringProp>
+              <stringProp name="HTTPSampler.domain">${EPR_BACKEND_HOST}</stringProp>
+              <stringProp name="HTTPSampler.port">${EPR_BACKEND_PORT}</stringProp>
+              <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
+              <stringProp name="HTTPSampler.path">/v1/dev/external-accreditations/${registrationNumber}/${accreditationYear}</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">PUT</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{
+  &quot;organisationNumber&quot;: &quot;${orgId}&quot;,
+  &quot;accreditationNumber&quot;: &quot;${accreditationNumber}&quot;,
+  &quot;prnIssuance&quot;: { &quot;tonnageBand&quot;: &quot;up_to_500&quot; },
+  &quot;status&quot;: {
+    &quot;lastUpdatedAt&quot;: &quot;${accreditationYear}-01-01T00:00:00.000Z&quot;,
+    &quot;timeline&quot;: [{ &quot;status&quot;: &quot;approved&quot;, &quot;at&quot;: &quot;${accreditationYear}-01-01T00:00:00.000Z&quot; }]
+  }
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                <collectionProp name="HeaderManager.headers">
+                  <elementProp name="" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </HeaderManager>
+              <hashTree/>
+              <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+                <collectionProp name="Asserion.test_strings">
+                  <stringProp name="49586">200</stringProp>
+                </collectionProp>
+                <stringProp name="Assertion.custom_message"></stringProp>
+                <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+                <boolProp name="Assertion.assume_success">false</boolProp>
+                <intProp name="Assertion.test_type">2</intProp>
+              </ResponseAssertion>
+              <hashTree/>
+            </hashTree>
           </hashTree>
         </hashTree>
         <CriticalSectionController guiclass="CriticalSectionControllerGui" testclass="CriticalSectionController" testname="Defra ID Stub Controller" enabled="true">
@@ -6557,7 +6620,7 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${organisationId}/registrations/${registrationId}/summary-logs/upload</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/summary-logs/upload</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -6629,9 +6692,9 @@ vars.put(&quot;linking_redirect_path&quot;, redirectPath)
             <stringProp name="script">import org.apache.commons.io.FileUtils
 import org.apache.jmeter.services.FileServer
 
-// Build a per-thread copy of spreadsheet.xlsx with the Cover sheet (xl/worksheets/sheet1.xml)
-// Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation,
-// and the data sheets&apos; load dates moved from 2026 to accreditationYear.
+// Build a per-thread copy of the summary log workbook for accreditationYear, whose loads are dated in January,
+// the month the scenario reports on, with the Cover sheet (xl/worksheets/sheet1.xml)
+// Registration Number (E10) and Accreditation Number (E13) set to the values seeded on the organisation.
 // JDK classes are looked up via Class.forName because the Groovy 3 bundled with JMeter 5.6.3 cannot
 // compile direct references to them on newer JDKs (Java 24: &quot;Unsupported class file major version 68&quot;)
 def Files = Class.forName(&quot;java.nio.file.Files&quot;)
@@ -6643,11 +6706,8 @@ def REPLACE_EXISTING = Class.forName(&quot;java.nio.file.StandardCopyOption&quot
 def registrationNumber = vars.get(&quot;registrationNumber&quot;)
 def accreditationNumber = vars.get(&quot;accreditationNumber&quot;)
 
-// Year of the load dates in spreadsheet.xlsx
-def SPREADSHEET_YEAR = 2026
-def yearOffset = vars.get(&quot;accreditationYear&quot;).toInteger() - SPREADSHEET_YEAR
-
-def source = Paths.get(FileServer.getFileServer().getBaseDir(), &quot;spreadsheet.xlsx&quot;)
+def workbook = &quot;summary-log-&quot; + vars.get(&quot;accreditationYear&quot;) + &quot;.xlsx&quot;
+def source = Paths.get(FileServer.getFileServer().getBaseDir(), workbook)
 def outputDir = Paths.get(FileUtils.getTempDirectoryPath(), &quot;epr-summary-logs&quot;, ctx.getThread().getThreadName().replaceAll(&quot;[^A-Za-z0-9_-]&quot;, &quot;_&quot;))
 Files.createDirectories(outputDir)
 def output = outputDir.resolve(&quot;spreadsheet.xlsx&quot;)
@@ -6663,20 +6723,6 @@ def setInlineString = { String xml, String ref, String value -&gt;
     return xml.substring(0, cell.start()) + replacement + xml.substring(cell.end())
 }
 
-// Shift the date serials in column G from row 4 down (row 3 is the template&apos;s example row) by yearOffset years,
-// keeping the day of month and time of day
-def LocalDate = Class.forName(&quot;java.time.LocalDate&quot;)
-def EXCEL_EPOCH = LocalDate.of(1899, 12, 30)
-def shiftDates = { String xml -&gt;
-    xml.replaceAll(/&lt;c r=&quot;G(\d+)&quot;([^&gt;]*?) t=&quot;n&quot;&gt;&lt;v&gt;([0-9.]+)&lt;\/v&gt;/) { all, row, attrs, serial -&gt;
-        if (row.toInteger() &lt; 4) return all
-        def value = new BigDecimal(serial)
-        def date = EXCEL_EPOCH.plusDays(value.longValue())
-        def dayShift = date.plusYears(yearOffset).toEpochDay() - date.toEpochDay()
-        return &quot;&lt;c r=\&quot;G&quot; + row + &quot;\&quot;&quot; + attrs + &quot; t=\&quot;n\&quot;&gt;&lt;v&gt;&quot; + value.add(BigDecimal.valueOf(dayShift)).toPlainString() + &quot;&lt;/v&gt;&quot;
-    }
-}
-
 // zipfs only rewrites the modified entry, unchanged entries are copied without recompression
 def zipFs = FileSystems.newFileSystem(URI.create(&quot;jar:&quot; + output.toUri()), [:])
 try {
@@ -6685,14 +6731,6 @@ try {
     xml = setInlineString(xml, &quot;E10&quot;, registrationNumber)
     xml = setInlineString(xml, &quot;E13&quot;, accreditationNumber)
     Files.write(coverSheet, xml.getBytes(&quot;UTF-8&quot;))
-
-    // Received, Reprocessed and Sent on sheets; skipped for the default year to avoid recompressing them every iteration
-    if (yearOffset != 0) {
-        [&quot;sheet2&quot;, &quot;sheet3&quot;, &quot;sheet4&quot;].each { name -&gt;
-            def sheet = zipFs.getPath(&quot;xl/worksheets/&quot; + name + &quot;.xml&quot;)
-            Files.write(sheet, shiftDates(new String(Files.readAllBytes(sheet), &quot;UTF-8&quot;)).getBytes(&quot;UTF-8&quot;))
-        }
-    }
 } finally {
     zipFs.close()
 }
@@ -7219,7 +7257,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7245,7 +7283,7 @@ if (prnIndex &gt;= 0 &amp;&amp; prnIndex + 1 &lt; parts.size()) {
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7592,7 +7630,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -7618,7 +7656,7 @@ vars.put(&quot;report_redirect_path&quot;, redirectPath)</stringProp>
           <stringProp name="HTTPSampler.domain">${EPR_FRONTEND_HOST}</stringProp>
           <stringProp name="HTTPSampler.port">${EPR_FRONTEND_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${HTTP_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/3/submissions/1/submit</stringProp>
+          <stringProp name="HTTPSampler.path">/organisations/${orgId}/registrations/${registrationNumber}/accreditations/${accreditationYear}/reports/monthly/1/submissions/1/submit</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
